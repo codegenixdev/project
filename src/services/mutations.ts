@@ -27,7 +27,7 @@ export function useDeleteTodo() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) => deleteTodo(id),
+    mutationFn: (id: number | undefined) => deleteTodo(id),
 
     onSuccess: () => {
       console.log("deleted successfully");
@@ -47,23 +47,21 @@ export function useDeleteTodo() {
 export function useUpdateTodo() {
   const queryClient = useQueryClient();
 
-  interface Props {
-    data: Todo;
-    id: string;
-  }
-
   return useMutation({
-    mutationFn: ({ data, id }: Props) => updateTodo(data, id),
+    mutationFn: (data: Todo) => updateTodo(data),
 
     onSuccess: () => {
       console.log("edited successfully");
     },
-    onSettled: async (_, error) => {
+    onSettled: async (_, error, variables) => {
       if (error) {
         console.log(error);
       } else {
         await queryClient.invalidateQueries({
           queryKey: ["todos"],
+        });
+        await queryClient.invalidateQueries({
+          queryKey: ["todo", variables.id],
         });
       }
     },

@@ -1,57 +1,14 @@
-import { ChangeEvent, useState } from "react";
-import { useTodos } from "../services/queries";
-import {
-  useCreateTodo,
-  useDeleteTodo,
-  useUpdateTodo,
-} from "../services/mutations";
+import { useDeleteTodo, useUpdateTodo } from "../services/mutations";
+import { useTodos, useTodosIds } from "../services/queries";
 import { Todo } from "../types/todo";
+import NewTodo from "./NewTodo";
 
 export default function Todos() {
-  const [updatingIndex, setUpdatingIndex] = useState(-1);
-  const todosQuery = useTodos();
-  const createMutation = useCreateTodo();
-  const deleteMutation = useDeleteTodo();
+  const todosQuery = useTodosIds();
   const updateMutation = useUpdateTodo();
+  const deleteMutation = useDeleteTodo();
 
-  const [updateTodoValue, setUpdateTodoValue] = useState("");
-  const [newTodoValue, setNewTodoValue] = useState("");
-
-  const handleCreateSubmitClick = () => {
-    const todo: Todo = {
-      title: newTodoValue,
-    };
-    createMutation.mutate(todo);
-  };
-
-  const handleDeleteSubmitClick = async (id: string) => {
-    await deleteMutation.mutateAsync(id);
-    setUpdatingIndex(-1);
-  };
-
-  const handleUpdateClick = (data: Todo, index: number) => {
-    setUpdatingIndex(index);
-    setUpdateTodoValue(data.title);
-  };
-
-  const handleCancelClick = () => {
-    setUpdatingIndex(-1);
-  };
-
-  const handleUpdateSubmitClick = async (data: Todo, id: string) => {
-    await updateMutation.mutateAsync({ data, id });
-    setUpdatingIndex(-1);
-  };
-
-  const handleNewTodoInputChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setNewTodoValue(event.target.value);
-  };
-
-  const handleUpdateTodoInputChange = (
-    event: ChangeEvent<HTMLInputElement>
-  ) => {
-    setUpdateTodoValue(event.target.value);
-  };
+  const todosQueries = useTodos(todosQuery.data);
 
   // if (todosQuery.status === 'pending') {
   // }
@@ -66,43 +23,44 @@ export default function Todos() {
 
   // now the only remained status is success
 
+  const handleMarkAsDoneSubmit = (data: Todo | undefined) => {
+    if (data) {
+      updateMutation.mutate({ ...data, checked: true });
+    }
+  };
+
+  const handleDeleteSubmit = async (id: number | undefined) => {
+    await deleteMutation.mutateAsync(id);
+  };
+
   return (
     <div>
-      <div>query function status: {todosQuery.fetchStatus}</div>
-      <div>query data status: {todosQuery.status}</div>
-
-      <input onChange={handleNewTodoInputChange} />
-      <button onClick={handleCreateSubmitClick}>Add Todo</button>
+      {/* use fetch status for loading spinners */}
+      <p>Query function status: {todosQuery.fetchStatus}</p>
+      <p>Query data status: {todosQuery.status}</p>
+      <NewTodo />
       <ul>
-        {todosQuery.data?.map((todo, index) => (
-          <li key={index}>
-            {updatingIndex === index ? (
-              <input
-                value={updateTodoValue}
-                onChange={handleUpdateTodoInputChange}
-              />
-            ) : (
-              <>{todo.title}</>
-            )}
-            <button onClick={() => handleDeleteSubmitClick(todo.id)}>
-              Delete
-            </button>
-            {updatingIndex !== index ? (
-              <button onClick={() => handleUpdateClick(todo, index)}>
-                update
-              </button>
-            ) : (
+        {todosQueries.map(({ data }) => (
+          <li key={data?.id}>
+            <div>Id: {data?.id}</div>
+            <span>
+              <strong>Title:</strong> {data?.title},{" "}
+              <strong>Description: </strong>
+              {data?.description}
+            </span>
+            <div>
               <button
-                onClick={() =>
-                  handleUpdateSubmitClick({ title: updateTodoValue }, todo.id)
-                }
+                onClick={() => handleMarkAsDoneSubmit(data)}
+                disabled={data?.checked}
               >
-                submit
+                {data?.checked ? "Done" : "Mark as done"}
               </button>
-            )}
-            {updatingIndex !== -1 && updatingIndex === index && (
-              <button onClick={handleCancelClick}>cancel</button>
-            )}
+              <button onClick={() => handleDeleteSubmit(data?.id)}>
+                Delete
+              </button>
+            </div>
+            <br />
+            <br />
           </li>
         ))}
       </ul>
