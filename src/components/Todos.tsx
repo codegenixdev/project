@@ -1,9 +1,12 @@
+import { useIsFetching } from "@tanstack/react-query";
 import { useDeleteTodo, useUpdateTodo } from "../services/mutations";
 import { useTodos, useTodosIds } from "../services/queries";
 import { Todo } from "../types/todo";
 import NewTodo from "./NewTodo";
 
 export default function Todos() {
+  const isFetching = useIsFetching();
+
   const todosQuery = useTodosIds();
   const updateMutation = useUpdateTodo();
   const deleteMutation = useDeleteTodo();
@@ -38,6 +41,7 @@ export default function Todos() {
       {/* use fetch status for loading spinners */}
       <p>Query function status: {todosQuery.fetchStatus}</p>
       <p>Query data status: {todosQuery.status}</p>
+      <p>Global isFetching: {isFetching}</p>
       <NewTodo />
       <ul>
         {todosQueries.map(({ data }) => (
