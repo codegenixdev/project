@@ -2,6 +2,7 @@ import axios from "axios";
 import { Todo } from "../types/todo";
 import { Project } from "../types/project";
 import { Product } from "../types/product";
+import { User } from "../types/user";
 
 const BASE_URL = "http://localhost:8080";
 
@@ -41,3 +42,9 @@ export const getProducts = async ({ pageParam }: { pageParam: number }) =>
       `products?_page=${pageParam + 1}&_limit=3`
     )
   ).data;
+
+export const getProduct = async (id: number) =>
+  (await axiosInstance.get<Product>(`products/${id}`)).data;
+
+export const getUsers = async () =>
+  (await axiosInstance.get<User[]>("users")).data;
